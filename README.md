@@ -22,6 +22,42 @@ Ce projet transforme un **ESP32-S3** et un **écran TFT** en un œil de monstre 
 3. **TP4056 [OUT+]** -> **Interrupteur [Patte milieu]**
 4. **Interrupteur [Patte latérale]** -> **ESP32-S3 [5V/VIN]**
 
+```
+graph TD
+    %% Alimentation et Charge
+    subgraph "Bloc Alimentation"
+        BATT[Batterie LiPo 3.7V] -- Rouge (+) --> TP_B_PLUS[TP4056 B+]
+        BATT -- Noir (-) --> TP_B_MOINS[TP4056 B-]
+        TP_OUT_MOINS[TP4056 OUT-] -- GND --> ESP_GND[ESP32-S3 GND]
+        TP_OUT_PLUS[TP4056 OUT+] --> SW[Interrupteur Slide]
+        SW -- ON --> ESP_5V[ESP32-S3 5V/VIN]
+    end
+
+    %% Connexion Caméra
+    subgraph "Caméra OV2640"
+        CAM[Module Caméra] -- Nappe FPC --> ESP_CAM_PORT[Port Caméra ESP32-S3]
+    end
+
+    %% Connexion Écran SPI
+    subgraph "Écran ILI9341 TFT"
+        ESP_3V3[ESP32-S3 3.3V] --> TFT_VCC[VCC]
+        ESP_GND --> TFT_GND[GND]
+        ESP_3V3 --> TFT_LED[LED / Backlight]
+        
+        ESP_GPIO10[GPIO 10] -- CS --> TFT_CS[CS]
+        ESP_GPIO18[GPIO 18] -- RESET --> TFT_RST[RESET]
+        ESP_GPIO17[GPIO 17] -- D/C --> TFT_DC[DC/RS]
+        ESP_GPIO11[GPIO 11] -- MOSI --> TFT_SDI[SDI/MOSI]
+        ESP_GPIO12[GPIO 12] -- SCK --> TFT_SCK[SCK]
+    end
+
+    %% Styles
+    style BATT fill:#f96,stroke:#333
+    style TP_B_PLUS fill:#f9f,stroke:#333
+    style SW fill:#fff,stroke:#333,stroke-width:2px
+    style ESP_5V fill:#6cf,stroke:#333
+```
+
 ## 🧠 LOGIQUE D'ANIMATION
 
 1. **Suivi (Tracking) :** Mapping des coordonnées de la caméra vers l'écran.

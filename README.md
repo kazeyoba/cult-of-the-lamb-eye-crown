@@ -22,7 +22,7 @@ Ce projet transforme un **ESP32-S3** et un **écran TFT** en un œil de monstre 
 3. **TP4056 [OUT+]** -> **Interrupteur [Patte milieu]**
 4. **Interrupteur [Patte latérale]** -> **ESP32-S3 [5V/VIN]**
 
-```
+```mermaid
 graph TD
     %% Alimentation et Charge
     subgraph "Bloc Alimentation"

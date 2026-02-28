@@ -1,75 +1,95 @@
-# cult-of-the-lamb-eye-crown
+# 👁️ Cult of the Lamb : Eye Crown Project
 
 **Regard de prédateur intelligent à suivi de mouvement**
 
-Ce projet transforme un **ESP32-S3** et un **écran TFT** en un œil de monstre hyper-réaliste. Grâce à l'intelligence artificielle embarquée, l'œil détecte les visages et les suit du regard avec une fluidité organique.
+Ce projet transforme un **ESP32-S3** et un **écran TFT** en un œil de monstre hyper-réaliste inspiré de l'univers de *Cult of the Lamb*. Grâce à l'IA embarquée, l'œil détecte les visages et les suit du regard avec une pupille slit (verticale) et un fond rouge sang.
 
 ## 🛠️ LISTE DES COMPOSANTS
 
 | Composant | Rôle | Spécification |
 | --- | --- | --- |
-| **ESP32-S3 Terminal Board** | Cerveau & IA | Version avec PSRAM et borniers à vis. |
+| **ESP32-S3 Freenove** | Cerveau & IA | Version avec port caméra FPC. |
 | **Caméra OV2640** | Vision | Objectif **160° Grand Angle** (Fisheye). |
-| **Écran TFT 2.8" SPI** | Le Regard | Résolution 320x240, contrôleur **ILI9341**. |
-| **Batterie LiPo 3.7V** | Énergie | Plat (pouch), min. 1000mAh. |
-| **Fils Jumper M-F** | Connectique | Côté femelle sur l'écran, dénudé dans les vis. |
+| **Écran TFT 2.8" SPI** | Le Regard | 320x240, contrôleur **ILI9341**. |
+| **Batterie LiPo 3.7V** | Énergie | EEMB 2000mAh 103454. |
+| **Module TP4056** | Charge & Sécurité | Protection de décharge incluse. |
+| **Interrupteur Slide** | Contrôle | Marche/Arrêt physique. |
 
-## 🔌 SCHÉMA DE CÂBLAGE (SANS SOUDURE)
+## 🔌 SCHÉMA D'ALIMENTATION SÉCURISÉ
 
-Dénude l'extrémité des fils Jumper et insère-les dans les borniers correspondant aux numéros GPIO suivants :
-
-| PIN ÉCRAN (TFT) | BORNES ESP32-S3 | NOTE |
-| --- | --- | --- |
-| **VCC** | **3V3** | Alimentation |
-| **GND** | **GND** | Masse |
-| **CS** | **GPIO 10** | Chip Select |
-| **RESET** | **GPIO 11** | Reset écran |
-| **DC** | **GPIO 12** | Data/Command |
-| **SDI (MOSI)** | **GPIO 13** | Données SPI |
-| **SCK (CLK)** | **GPIO 14** | Horloge |
-| **LED** | **3V3** | Rétroéclairage |
-
-> **IMPORTANT :** La caméra se branche directement dans le connecteur à clapet (nappe FPC) situé sur la carte ESP32-S3.
-
+1. **Batterie** [B+/B-] -> **TP4056** [B+/B-]
+2. **TP4056 [OUT-]** -> **ESP32-S3 [GND]**
+3. **TP4056 [OUT+]** -> **Interrupteur [Patte milieu]**
+4. **Interrupteur [Patte latérale]** -> **ESP32-S3 [5V/VIN]**
 
 ## 🧠 LOGIQUE D'ANIMATION
 
-Le code intègre trois couches de mouvements superposées pour un aspect vivant :
+1. **Suivi (Tracking) :** Mapping des coordonnées de la caméra vers l'écran.
+2. **Pupille Slit :** Forme ovale verticale noire (type reptile/démon).
+3. **États de conscience :** - *Repos :* Balayage lent de gauche à droite.
+   - *Concentration :* La pupille se rétrécit et fixe la cible détectée.
 
-1. **Suivi (Tracking) :** Mapping des coordonnées  de la caméra vers l'écran avec interpolation fluide.
-2. **Pulsation :** La pupille verticale "respire" (élargissement sinusoïdal de  pixels).
-3. **Clignement :** Fermeture aléatoire de la paupière rouge toutes les 3 à 9 secondes.
+### 💻 CODE ESP32 (Arduino IDE)
 
+Ce code utilise la bibliothèque **TFT_eSPI**. Assure-toi que ton fichier `User_Setup.h` correspond aux pins : **CS:10, RST:18, DC:17, MOSI:11, SCK:12**.
 
-## 💻 INSTALLATION DU CODE
+```cpp
+#include <SPI.h>
+#include <TFT_eSPI.h> // Bibliothèque de Bodmer
 
-### 1. Préparation de l'IDE Arduino
+TFT_eSPI tft = TFT_eSPI();
 
-* Installez le support des cartes **ESP32** (Outils > Type de carte > Gestionnaire de carte).
-* Installez la bibliothèque **TFT_eSPI** de Bodmer.
-* **Configuration cruciale :** Allez dans le dossier `libraries/TFT_eSPI/User_Setup.h` et assurez-vous que les numéros de pins correspondent à ceux du tableau ci-dessus.
+// Configuration des couleurs
+#define C_BLOOD 0xB800    // Rouge sombre
+#define C_PUPIL TFT_BLACK
+#define C_SCLERA TFT_RED
 
-### 2. Téléchargement du code
+// Variables d'animation
+int eyeX = 160, eyeY = 120;
+int targetX = 160, targetY = 120;
+int pupilWidth = 30;
+bool isTracking = false;
 
-* Copiez le code complet fourni précédemment.
-* Sélectionnez le modèle de carte **ESP32S3 Dev Module**.
-* Activez l'option **PSRAM: "OPI PSRAM"** dans les menus de l'IDE (essentiel pour l'IA).
-* Téléversez via USB-C.
+void setup() {
+  tft.init();
+  tft.setRotation(1); // Mode paysage
+  tft.fillScreen(C_SCLERA);
+  
+  Serial.begin(115200);
+}
 
-## 🎨 DESIGN VISUEL
+void drawEye(int x, int y, int pW) {
+  tft.fillScreen(C_SCLERA); 
+  
+  tft.fillSmoothCircle(x, y, 70, C_BLOOD);
+  
+  // FillEllipse(x, y, rayon_horizontal, rayon_vertical, couleur)
+  tft.fillEllipse(x, y, pW, 65, C_PUPIL);
+  
+  tft.fillSmoothCircle(x - 15, y - 25, 8, TFT_WHITE);
+}
 
-* **Sclère :** Fond rouge intense (`TFT_RED`).
-* **Iris :** Dégradé rouge sombre (`0x8000`).
-* **Pupille :** Ovale verticale noire type reptile.
-* **Reflet :** Point blanc fixe décalé pour simuler la réflexion de la lumière sur une cornée humide.
+void loop() {  
+  if (!isTracking) {
+    // MODE REPOS : Balayage horizontal lent
+    targetX = 160 + sin(millis() / 1000.0) * 60;
+    targetY = 120;
+    pupilWidth = 35; // Pupille un peu plus large
+    
+    // Aléatoirement, on simule une "concentration"
+    if (random(200) == 1) isTracking = true;
+  } else {
+    // MODE CONCENTRATION : Pupille fine et fixe
+    pupilWidth = 15; 
+    if (random(100) == 1) isTracking = false;
+  }
 
-## 📦 INTÉGRATION DANS LE PROPS
+  // Interpolation fluide (Ease-in-out)
+  eyeX += (targetX - eyeX) * 0.1;
+  eyeY += (targetY - eyeY) * 0.1;
 
-1. **Caméra :** Doit être centrée juste au-dessus de l'écran.
-2. **Isolation :** Placez la batterie entre l'écran et la carte ESP32, isolée par du ruban adhésif pour éviter tout court-circuit.
-3. **Masquage :** Utilisez une façade noire (carton plume ou impression 3D) pour ne laisser voir que l'écran et la lentille de la caméra.
-
-## ⚠️ PRÉCAUTIONS
-
-* **Polarité Batterie :** Ne jamais inverser le rouge (+) et le noir (-) dans les borniers.
-* **Chauffe :** Le processeur S3 peut chauffer lors de l'analyse IA. Assurez-vous d'avoir quelques trous d'aération dans votre accessoire.
+  drawEye(eyeX, eyeY, pupilWidth);
+  
+  delay(20); // ~50 FPS
+}
+```

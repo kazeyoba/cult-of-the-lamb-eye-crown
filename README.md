@@ -45,10 +45,11 @@ graph TD
         ESP_3V3 --> TFT_LED[LED / Backlight]
         
         ESP_GPIO10[GPIO 10] -- CS --> TFT_CS[CS]
-        ESP_GPIO18[GPIO 18] -- RESET --> TFT_RST[RESET]
-        ESP_GPIO17[GPIO 17] -- D/C --> TFT_DC[DC/RS]
-        ESP_GPIO11[GPIO 11] -- MOSI --> TFT_SDI[SDI/MOSI]
-        ESP_GPIO12[GPIO 12] -- SCK --> TFT_SCK[SCK]
+        ESP_GPIO11[GPIO 11] -- RESET --> TFT_RST[RESET]
+        ESP_GPIO12[GPIO 12] -- D/C --> TFT_DC[DC/RS]
+        ESP_GPIO13[GPIO 13] -- MOSI --> TFT_SDI[SDI/MOSI]
+        ESP_GPIO14[GPIO 14] -- SCK --> TFT_SCK[SCK]
+        ESP_GPIO9[GPIO 9] -- MISO --> TFT_MISO[MISO]
     end
 
     %% Styles
@@ -56,6 +57,12 @@ graph TD
     style TP_B_PLUS fill:#f9f,stroke:#333
     style SW fill:#fff,stroke:#333,stroke-width:2px
     style ESP_5V fill:#6cf,stroke:#333
+    style ESP_GPIO10 fill:#ccf,stroke:#333
+    style ESP_GPIO11 fill:#ccf,stroke:#333
+    style ESP_GPIO12 fill:#ccf,stroke:#333
+    style ESP_GPIO13 fill:#ccf,stroke:#333
+    style ESP_GPIO14 fill:#ccf,stroke:#333
+    style ESP_GPIO9 fill:#ccf,stroke:#333
 ```
 
 ## 🧠 LOGIQUE D'ANIMATION
@@ -67,65 +74,106 @@ graph TD
 
 ### 💻 CODE ESP32 (Arduino IDE)
 
-Ce code utilise la bibliothèque **TFT_eSPI**. Assure-toi que ton fichier `User_Setup.h` correspond aux pins : **CS:10, RST:18, DC:17, MOSI:11, SCK:12**.
+Voici une **section README simple** que tu peux mettre dans ton projet pour **tester ton écran TFT ILI9341 avec ton ESP32-S3 CAM** et vérifier que tout fonctionne.
+
+---
+
+# Test écran TFT ILI9341 avec ESP32-S3 CAM
+
+Ce test permet de vérifier le fonctionnement de l’écran **ILI9341 TFT LCD Controller** connecté à une **Freenove ESP32-S3 CAM Board** en utilisant l’interface SPI.
+
+Le test affiche du texte et des couleurs sur l’écran.
+
+# # Librairies nécessaires
+
+Installer ces bibliothèques dans **Arduino IDE** :
+
+- Adafruit GFX
+- Adafruit ILI9341
+
+## 3. SPI
+
+Incluse automatiquement avec le core ESP32.
+
+## Branchement
+
+| TFT ILI9341 | ESP32-S3 |
+| ----------- | -------- |
+| VCC         | 3.3V     |
+| GND         | GND      |
+| CS          | GPIO10   |
+| RESET       | GPIO11   |
+| DC          | GPIO12   |
+| MOSI        | GPIO13   |
+| SCK         | GPIO14   |
+| MISO        | GPIO9    |
+| LED         | 3.3V     |
+
+Pins du **tactile non utilisées**.
+
+## Code exemple
 
 ```cpp
 #include <SPI.h>
-#include <TFT_eSPI.h> // Bibliothèque de Bodmer
+#include <Adafruit_GFX.h>
+#include <Adafruit_ILI9341.h>
 
-TFT_eSPI tft = TFT_eSPI();
+#define TFT_CS   10
+#define TFT_RST  11
+#define TFT_DC   12
+#define TFT_MOSI 13
+#define TFT_CLK  14
+#define TFT_MISO 9
 
-// Configuration des couleurs
-#define C_BLOOD 0xB800    // Rouge sombre
-#define C_PUPIL TFT_BLACK
-#define C_SCLERA TFT_RED
-
-// Variables d'animation
-int eyeX = 160, eyeY = 120;
-int targetX = 160, targetY = 120;
-int pupilWidth = 30;
-bool isTracking = false;
+Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
 
 void setup() {
-  tft.init();
-  tft.setRotation(1); // Mode paysage
-  tft.fillScreen(C_SCLERA);
-  
-  Serial.begin(115200);
+
+  SPI.begin(TFT_CLK, TFT_MISO, TFT_MOSI);
+
+  tft.begin();
+  tft.setRotation(1);
+
+  tft.fillScreen(ILI9341_BLACK);
+
+  tft.setTextColor(ILI9341_GREEN);
+  tft.setTextSize(2);
+  tft.setCursor(20,20);
+  tft.println("ESP32-S3 OK");
+
+  delay(2000);
+
+  tft.fillScreen(ILI9341_RED);
+  delay(1000);
+
+  tft.fillScreen(ILI9341_GREEN);
+  delay(1000);
+
+  tft.fillScreen(ILI9341_BLUE);
 }
 
-void drawEye(int x, int y, int pW) {
-  tft.fillScreen(C_SCLERA); 
-  
-  tft.fillSmoothCircle(x, y, 70, C_BLOOD);
-  
-  // FillEllipse(x, y, rayon_horizontal, rayon_vertical, couleur)
-  tft.fillEllipse(x, y, pW, 65, C_PUPIL);
-  
-  tft.fillSmoothCircle(x - 15, y - 25, 8, TFT_WHITE);
-}
+void loop() {
 
-void loop() {  
-  if (!isTracking) {
-    // MODE REPOS : Balayage horizontal lent
-    targetX = 160 + sin(millis() / 1000.0) * 60;
-    targetY = 120;
-    pupilWidth = 35; // Pupille un peu plus large
-    
-    // Aléatoirement, on simule une "concentration"
-    if (random(200) == 1) isTracking = true;
-  } else {
-    // MODE CONCENTRATION : Pupille fine et fixe
-    pupilWidth = 15; 
-    if (random(100) == 1) isTracking = false;
-  }
-
-  // Interpolation fluide (Ease-in-out)
-  eyeX += (targetX - eyeX) * 0.1;
-  eyeY += (targetY - eyeY) * 0.1;
-
-  drawEye(eyeX, eyeY, pupilWidth);
-  
-  delay(20); // ~50 FPS
 }
 ```
+
+## Résultat attendu
+
+Si tout fonctionne :
+
+1. L’écran devient **noir**
+2. Le texte **ESP32-S3 OK** apparaît
+3. L’écran change de couleur :
+
+   * rouge
+   * vert
+   * bleu
+
+## Dépannage
+
+Si l’écran reste noir :
+
+* vérifier **CS / DC inversés**
+* vérifier **MOSI / MISO**
+* vérifier alimentation **3.3V**
+* vérifier installation des librairies

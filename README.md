@@ -2,7 +2,7 @@
 
 **Regard de prédateur intelligent à suivi de mouvement**
 
-Ce projet transforme un **ESP32-S3** et un **écran TFT** en un œil de monstre hyper-réaliste inspiré de l'univers de *Cult of the Lamb*. Grâce à l'IA embarquée, l'œil détecte les visages et les suit du regard avec une pupille slit (verticale) et un fond rouge sang.
+Ce projet transforme un **ESP32-S3** et un **écran TFT** en un œil de monstre inspiré de l'univers de *Cult of the Lamb*. 
 
 ## 🛠️ LISTE DES COMPOSANTS
 
@@ -74,17 +74,13 @@ graph TD
 
 ### 💻 CODE ESP32 (Arduino IDE)
 
-Voici une **section README simple** que tu peux mettre dans ton projet pour **tester ton écran TFT ILI9341 avec ton ESP32-S3 CAM** et vérifier que tout fonctionne.
-
----
-
-# Test écran TFT ILI9341 avec ESP32-S3 CAM
+#### Test écran TFT ILI9341 avec ESP32-S3 CAM
 
 Ce test permet de vérifier le fonctionnement de l’écran **ILI9341 TFT LCD Controller** connecté à une **Freenove ESP32-S3 CAM Board** en utilisant l’interface SPI.
 
 Le test affiche du texte et des couleurs sur l’écran.
 
-# # Librairies nécessaires
+#### Librairies nécessaires
 
 Installer ces bibliothèques dans **Arduino IDE** :
 
@@ -111,7 +107,7 @@ Incluse automatiquement avec le core ESP32.
 
 Pins du **tactile non utilisées**.
 
-## Code exemple
+#### Code exemple
 
 ```cpp
 #include <SPI.h>
@@ -157,7 +153,7 @@ void loop() {
 }
 ```
 
-## Résultat attendu
+#### Résultat attendu
 
 Si tout fonctionne :
 
@@ -169,7 +165,7 @@ Si tout fonctionne :
    * vert
    * bleu
 
-## Dépannage
+#### Dépannage
 
 Si l’écran reste noir :
 
@@ -177,3 +173,7 @@ Si l’écran reste noir :
 * vérifier **MOSI / MISO**
 * vérifier alimentation **3.3V**
 * vérifier installation des librairies
+
+#### Animation
+
+Setup with tft_espi & source code are private. **DO IT YOURSELF**

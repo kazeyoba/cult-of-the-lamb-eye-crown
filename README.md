@@ -1,7 +1,5 @@
 # 👁️ Cult of the Lamb : Eye Crown Project
 
-**Regard de prédateur intelligent à suivi de mouvement**
-
 Ce projet transforme un **ESP32-S3** et un **écran TFT** en un œil de monstre inspiré de l'univers de *Cult of the Lamb*. 
 
 ## 🛠️ LISTE DES COMPOSANTS
